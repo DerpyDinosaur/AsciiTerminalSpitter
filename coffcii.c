@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <signal.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <errno.h>
 
 #define RED 	"\x1b[31m"
 #define GREEN 	"\x1b[32m"
@@ -11,31 +13,38 @@
 
 #define clearScreen() printf("\033[H\033[J")
 
+void signalHandler(int sig){
+	// Re-enable cursor
+	printf("\e[?25h");
+	exit(0);
+}
+
 int main(int argc, char const *argv[]){
-	
-	// BUG: CENTER WONT WORK
-	// struct winsize w;
-	// ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-	// int width = w.ws_col;
-	int tabCount = 0;
+	// Signal handler
+	signal(SIGINT, signalHandler);
+
+	struct winsize w;
+	if (ioctl(STDIN_FILENO, TIOCGWINSZ, &w) == -1) {
+    	fprintf(stderr, "Cannot find STDIN info: %s\n", strerror(errno));
+    	exit(1);
+	}
+	int width = w.ws_col;
+
 	bool rainbowBlast = false;
 	char line[100];
-
 
 	// Blocked Unbuffered
 	setvbuf(stdout, NULL, _IOFBF, 0);
 
 	// Blank screen ready for printing
 	printf("\033[H\033[J");
+
 	// Remove cursor
 	printf("\033[?25l");
 
-	if(argc > 0){
-		tabCount = atoi(argv[1]);
-	}
-
-	if (argv[2] != 0){
-		if (strcmp(argv[2], "true") == 0){
+	// Check arguments if 
+	if (argc > 1){
+		if (strcmp(argv[1], "true") == 0){
 			rainbowBlast = true;
 		}
 	}
@@ -48,20 +57,16 @@ int main(int argc, char const *argv[]){
 			puts(RED"\tSomething went wrong with the ascii file"RESET);
 		}else{
 			while(!feof(fp)){
-				// BUG: CENTER WONT WORK
-				// int center = (width + strlen(line)) / 2;
-				// printf("%*s", center, line);
-
 				fgets(line, sizeof(line), fp);
 				fflush(stdout);
-				for (int i = 0; i < tabCount; ++i){
-					printf("\t");
-				}
-				printf("%s", line);
+				int center = (width + strlen(line)) / 2;
+				printf("%*s", center, line);
 			}
 			fclose(fp);
 		}
 		printf("\033[H");
+
+		// If rainbowBlast == false then sleep
 		if (!rainbowBlast){
 			sleep(1);
 		}
