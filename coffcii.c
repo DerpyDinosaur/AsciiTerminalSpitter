@@ -23,6 +23,7 @@ int main(int argc, char const *argv[]){
 	// Signal handler
 	signal(SIGINT, signalHandler);
 
+	// Get width of terminal
 	struct winsize w;
 	if (ioctl(STDIN_FILENO, TIOCGWINSZ, &w) == -1) {
     	fprintf(stderr, "Cannot find STDIN info: %s\n", strerror(errno));
@@ -42,7 +43,7 @@ int main(int argc, char const *argv[]){
 	// Remove cursor
 	printf("\033[?25l");
 
-	// Check arguments if 
+	// Check argument if true
 	if (argc > 1){
 		if (strcmp(argv[1], "true") == 0){
 			rainbowBlast = true;
@@ -58,7 +59,7 @@ int main(int argc, char const *argv[]){
 		}else{
 			while(!feof(fp)){
 				fgets(line, sizeof(line), fp);
-				fflush(stdout);
+				fflush(stdin);
 				int center = (width + strlen(line)) / 2;
 				printf("%*s", center, line);
 			}
