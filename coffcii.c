@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <errno.h>
+#include <time.h>
 
 #define RED 	"\x1b[31m"
 #define GREEN 	"\x1b[32m"
@@ -34,11 +35,15 @@ int main(int argc, char const *argv[]){
 	bool rainbowBlast = false;
 	char line[100];
 
+	struct timespec tim, tim2;
+	tim.tv_sec = 0;
+	tim.tv_nsec = 200000000L;
+
 	// Blocked Unbuffered
 	setvbuf(stdout, NULL, _IOFBF, 0);
 
 	// Blank screen ready for printing
-	printf("\033[H\033[J");
+	clearScreen();
 
 	// Remove cursor
 	printf("\033[?25l");
@@ -69,7 +74,10 @@ int main(int argc, char const *argv[]){
 
 		// If rainbowBlast == false then sleep
 		if (!rainbowBlast){
-			sleep(1);
+			if (nanosleep(&tim, &tim2) > 0){
+				printf("Nanosleep failed!");
+				return -1;
+			}
 		}
 	}
 	return 0;
